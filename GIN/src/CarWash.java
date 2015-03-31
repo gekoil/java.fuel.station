@@ -1,5 +1,4 @@
 import java.util.ArrayDeque;
-import java.util.concurrent.ArrayBlockingQueue;
 
 public class CarWash extends Thread {
 
