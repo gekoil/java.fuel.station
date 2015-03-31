@@ -1,7 +1,7 @@
 
 public class Car {
 
-    private static int carCount;
+    private static int carCount = 0;
     private int id;
 	private int fuel;
 	private boolean needWash = false;
