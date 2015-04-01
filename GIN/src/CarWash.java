@@ -1,9 +1,12 @@
 import java.util.ArrayDeque;
+import java.util.logging.Logger;
 
 public class CarWash extends Thread {
+	private static final Logger log = Logger.getLogger(CarWash.class.getName());
 
 	private final int NUM_WORKERS = 3;
 	private final int TUNEL_TIME = 100;
+
 	Cleaner[] cleaner = new Cleaner[NUM_WORKERS];
 	Tunnel tunnel = new Tunnel();
 	private ArrayDeque<Car> waitingToIntern = new ArrayDeque<Car>();
@@ -112,25 +115,25 @@ public class CarWash extends Thread {
 	}
 	
 	class Cleaner extends Thread {
-		
+
 		private int efficiency = 500 + (int)Math.random() * (1001);
-		
+
 		public int getEfficiency() {
 			return efficiency;
 		}
-		
+
 		public void run() {
 			while(!goHome || !waitingToIntern.isEmpty()) {
 				Car c = getCarIn();
 				try {
 					sleep(efficiency);
 					c.setWash(false);
-				} catch (InterruptedException e) {
+				} catch (InterruptedException | NullPointerException e) {
 					e.printStackTrace();
-				} catch (NullPointerException e1) { }
+				}
 			}
 		}
-		
+
 	}
 	
 }

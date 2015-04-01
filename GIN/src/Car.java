@@ -1,5 +1,7 @@
+import java.util.logging.Logger;
 
 public class Car {
+	private static final Logger log = Logger.getLogger(Car.class.getName());
 
     private static int carCount = 0;
     private int id;
