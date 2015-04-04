@@ -95,7 +95,6 @@ public class CarWash extends Thread {
 		notifyAll();
 	}
 	
-	
 	class Tunnel extends Thread {
 
 		@Override
@@ -103,12 +102,12 @@ public class CarWash extends Thread {
 			while(!endOfDay || !waitingToWash.isEmpty()) {
 				Car c = getCarOut();
 				try {
-					sleep(100);
+					sleep(1000);
 					waitingToIntern.addLast(c);
 					wakeUP();
-				} catch (InterruptedException e) {
+				} catch (InterruptedException | NullPointerException e) {
 					e.printStackTrace();
-				} catch (NullPointerException e1) { }
+				}
 			}
 		}
 		

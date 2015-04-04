@@ -7,16 +7,24 @@ public class FuelStation extends Thread{
     private ArrayList<CarWash> carWashes;
     private ArrayList<Pump> fuelPumps;
     private ArrayList<Car> incomingCars;
+    private Integer fuelReserve;
+    private int maxFuelCapacity;
+    private boolean isWorking;
 
-    public FuelStation(ArrayList<CarWash> carWashes, ArrayList<Pump> fuelPumps) {
+    public FuelStation(ArrayList<CarWash> carWashes, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity) {
         this.carWashes = carWashes;
         this.fuelPumps = fuelPumps;
+        this.fuelReserve = fuelReserve;
+        this.maxFuelCapacity = fuelCapacity;
         incomingCars = new ArrayList<>();
+        isWorking = true;
     }
 
     @Override
     public void run() {
-
+        while(isWorking) {
+            // TODO: Add looping on incoming cars until shutdown is called
+        }
     }
 
     public ArrayList<CarWash> getCarWashes() {
@@ -24,7 +32,7 @@ public class FuelStation extends Thread{
     }
 
     public void addCarWash(CarWash carWash) {
-        this.carWashes.add(carWash);
+        carWashes.add(carWash);
     }
 
     public ArrayList<Pump> getFuelPumps() {
@@ -32,10 +40,31 @@ public class FuelStation extends Thread{
     }
 
     public void addFuelPump(Pump fuelPump) {
-        this.fuelPumps.add(fuelPump);
+        fuelPumps.add(fuelPump);
     }
 
     public void addCar(Car car) {
-        this.incomingCars.add(car);
+        incomingCars.add(car);
+    }
+
+    public boolean requestFuel(int fuelRequest) throws InterruptedException {
+        synchronized(fuelReserve) {
+            while(fuelReserve < maxFuelCapacity * 0.2) {
+                wait();
+            }
+            if (fuelReserve > fuelRequest) { // Do we really need to get into this?
+                fuelReserve -= fuelRequest;
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    public void addFuel(int fuelRefill) {
+        synchronized (fuelReserve) {
+            fuelReserve += fuelRefill;
+        }
+        fuelReserve.notify();
     }
 }
