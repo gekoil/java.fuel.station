@@ -7,7 +7,9 @@ public class App {
         CarWash wash = new CarWash();
         // TODO: Read the XML file provided in args variable
         GasStation station = new GasStation(wash, pumps, 0, 1500);
-        station.run();
+        for(int i = 0; i <= 6; i++)
+        	station.addFuelPump(new Pump(station));
+        station.start();
         try {
             station.join();
         } catch (InterruptedException e) {
