@@ -32,18 +32,16 @@ public class GasStation extends Thread{
 	        		fuelPumps.get(next.getPumpNumber()).addCar(next);
 	        	else if(next.isNeedWash() && !next.isNeedFuel())
 	        		carWash.addCar(next);
-	        	else if(next.isNeedFuel() && next.isNeedWash()) {
+	        	else if(next.isNeedFuel() && next.isNeedWash())
 	        		if(carWash.getWaitingTime() <= fuelPumps.get(next.getPumpNumber()).getWatingTime())
 	        			carWash.addCar(next);
 	        		else
 	        			fuelPumps.get(next.getPumpNumber()).addCar(next);
-	        	}
         	}
         }
         try {
 			carWash.join();
 			for(Pump p : fuelPumps) {
-				notifyAll();
 				p.join();
 			}
 		} catch (InterruptedException e) {
@@ -67,7 +65,15 @@ public class GasStation extends Thread{
         incomingCars.addLast(car);
     }
 
-    public boolean requestFuel(int fuelRequest) throws InterruptedException {
+    public boolean isWorking() {
+		return isWorking;
+	}
+
+	public void setWorking(boolean isWorking) {
+		this.isWorking = isWorking;
+	}
+
+	public boolean requestFuel(int fuelRequest) throws InterruptedException {
         synchronized(fuelReserve) {
             while(fuelReserve < maxFuelCapacity * 0.2) {
                 wait();
