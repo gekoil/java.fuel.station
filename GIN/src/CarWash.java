@@ -6,9 +6,10 @@ public class CarWash extends Thread {
 
 	private final int NUM_WORKERS = 3;
 	private final int TUNEL_TIME = 100;
-
-	Cleaner[] cleaner = new Cleaner[NUM_WORKERS];
-	Tunnel tunnel = new Tunnel();
+	
+	private FuelStation station;
+	private Cleaner[] cleaner = new Cleaner[NUM_WORKERS];
+	private Tunnel tunnel = new Tunnel();
 	private ArrayDeque<Car> waitingToIntern = new ArrayDeque<Car>();
 	private ArrayDeque<Car> waitingToWash = new ArrayDeque<Car>();
 	private boolean endOfDay = false;
@@ -33,6 +34,15 @@ public class CarWash extends Thread {
 		}
 	}
 	
+	public FuelStation getStation() {
+		return station;
+	}
+
+	public void setStation(FuelStation station) {
+		this.station = station;
+	}
+
+
 	public void addCar(Car c) {
 		waitingToWash.addLast(c);
 		wakeUP();
@@ -60,7 +70,7 @@ public class CarWash extends Thread {
 		}
 	}
 
-	public int getTimeWaiting() {
+	public int getWaitingTime() {
 		int time = TUNEL_TIME * waitingToWash.size();
 		int timeIn = 0;
 		for(Cleaner cln : cleaner)
@@ -127,6 +137,7 @@ public class CarWash extends Thread {
 				try {
 					sleep(efficiency);
 					c.setWash(false);
+					station.addCar(c);
 				} catch (InterruptedException | NullPointerException e) {
 					e.printStackTrace();
 				}

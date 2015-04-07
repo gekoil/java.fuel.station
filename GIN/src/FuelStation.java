@@ -1,38 +1,58 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class FuelStation extends Thread{
     private static final Logger log = Logger.getLogger(FuelStation.class.getName());
 
-    private ArrayList<CarWash> carWashes;
+    private CarWash carWash;
     private ArrayList<Pump> fuelPumps;
-    private ArrayList<Car> incomingCars;
+    private ArrayDeque<Car> incomingCars;
     private Integer fuelReserve;
     private int maxFuelCapacity;
     private boolean isWorking;
 
-    public FuelStation(ArrayList<CarWash> carWashes, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity) {
-        this.carWashes = carWashes;
+    public FuelStation(CarWash carWash, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity) {
+        this.carWash = carWash;
+        carWash.setStation(this);
         this.fuelPumps = fuelPumps;
         this.fuelReserve = fuelReserve;
         this.maxFuelCapacity = fuelCapacity;
-        incomingCars = new ArrayList<>();
+        incomingCars = new ArrayDeque<Car>();
         isWorking = true;
     }
 
     @Override
     public void run() {
-        while(isWorking) {
+        while(isWorking || !incomingCars.isEmpty()) {
             // TODO: Add looping on incoming cars until shutdown is called
+        	if(!incomingCars.isEmpty()) {
+	        	Car next = incomingCars.pollFirst();
+	        	if(next.isNeedFuel() && !next.isNeedWash())
+	        		fuelPumps.get(next.getPumpNumber()).addCar(next);
+	        	else if(next.isNeedWash() && !next.isNeedFuel())
+	        		carWash.addCar(next);
+	        	else if(next.isNeedFuel() && next.isNeedWash()) {
+	        		if(carWash.getWaitingTime() <= fuelPumps.get(next.getPumpNumber()).getWatingTime())
+	        			carWash.addCar(next);
+	        		else
+	        			fuelPumps.get(next.getPumpNumber()).addCar(next);
+	        	}
+        	}
         }
+        try {
+			carWash.join();
+			for(Pump p : fuelPumps) {
+				notifyAll();
+				p.join();
+			}
+		} catch (InterruptedException e) {
+			e.getMessage();
+		}
     }
 
-    public ArrayList<CarWash> getCarWashes() {
-        return carWashes;
-    }
-
-    public void addCarWash(CarWash carWash) {
-        carWashes.add(carWash);
+    public CarWash getCarWash() {
+        return carWash;
     }
 
     public ArrayList<Pump> getFuelPumps() {
@@ -44,7 +64,7 @@ public class FuelStation extends Thread{
     }
 
     public void addCar(Car car) {
-        incomingCars.add(car);
+        incomingCars.addLast(car);
     }
 
     public boolean requestFuel(int fuelRequest) throws InterruptedException {
@@ -67,4 +87,5 @@ public class FuelStation extends Thread{
         }
         fuelReserve.notify();
     }
+    
 }

@@ -44,6 +44,10 @@ public class Pump extends Thread{
     public void shutDown() {
         this.isRunning = false;
     }
+    
+    public int getWatingTime() {
+    	return cars.size()*100;
+    }
 
     @Override
     public void run() {

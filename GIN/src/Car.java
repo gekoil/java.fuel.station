@@ -8,6 +8,7 @@ public class Car {
     private static int carCount = 0;
     private int id;
 	private int fuel;
+	private final int pumpNumber;
 	private boolean needWash = false;
 	private boolean needFuel = false;
 	
@@ -17,20 +18,23 @@ public class Car {
 		fuel = (int) Math.random() * 60;
 		if(fuel > 10) {
 			needFuel = true;
+			pumpNumber = (int) Math.random() * 4;
 		} else {
 			needFuel = false;
 			fuel = 0;
+			pumpNumber = 0;
 		}
         id = carCount++;
 
 		initLog();
 	}
 
-	Car(int id, boolean needFuel, boolean needWash, int fuel) {
+	Car(int id, boolean needFuel, boolean needWash, int fuel, int pumpNumber) {
 		this.id = id;
 		this.needFuel = needFuel;
 		this.needWash = needWash;
 		this.fuel = fuel;
+		this.pumpNumber = pumpNumber;
 
 		initLog();
 	}
@@ -73,4 +77,9 @@ public class Car {
 	public void setNeedFuel(boolean needFuel) {
 		this.needFuel = needFuel;
 	}
+
+	public int getPumpNumber() {
+		return pumpNumber;
+	}
+	
 }
