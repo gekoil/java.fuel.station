@@ -7,7 +7,7 @@ public class CarWash extends Thread {
 	private final int NUM_WORKERS = 3;
 	private final int TUNEL_TIME = 100;
 	
-	private FuelStation station;
+	private GasStation station;
 	private Cleaner[] cleaner = new Cleaner[NUM_WORKERS];
 	private Tunnel tunnel = new Tunnel();
 	private ArrayDeque<Car> waitingToIntern = new ArrayDeque<Car>();
@@ -34,11 +34,11 @@ public class CarWash extends Thread {
 		}
 	}
 	
-	public FuelStation getStation() {
+	public GasStation getStation() {
 		return station;
 	}
 
-	public void setStation(FuelStation station) {
+	public void setStation(GasStation station) {
 		this.station = station;
 	}
 

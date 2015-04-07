@@ -10,11 +10,11 @@ public class Pump extends Thread{
     private static int pumpCount;
 
     private int id;
-    private FuelStation station;
+    private GasStation station;
     private boolean isRunning;
     private BlockingQueue<Car> cars;
 	
-    public  Pump(FuelStation station) {
+    public  Pump(GasStation station) {
         id = pumpCount++;
         setStation(station);
         cars = new LinkedBlockingDeque<>();
@@ -29,7 +29,7 @@ public class Pump extends Thread{
         }
     }
 
-    public void setStation(FuelStation station) {
+    public void setStation(GasStation station) {
         this.station = station;
     }
 

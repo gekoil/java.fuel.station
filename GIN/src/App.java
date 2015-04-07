@@ -6,7 +6,7 @@ public class App {
         ArrayList<Pump> pumps = new ArrayList<>();
         CarWash wash = new CarWash();
         // TODO: Read the XML file provided in args variable
-        FuelStation station = new FuelStation(wash, pumps, 0, 1500);
+        GasStation station = new GasStation(wash, pumps, 0, 1500);
         station.run();
         try {
             station.join();

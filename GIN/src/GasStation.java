@@ -2,8 +2,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
-public class FuelStation extends Thread{
-    private static final Logger log = Logger.getLogger(FuelStation.class.getName());
+public class GasStation extends Thread{
+    private static final Logger log = Logger.getLogger(GasStation.class.getName());
 
     private CarWash carWash;
     private ArrayList<Pump> fuelPumps;
@@ -12,7 +12,7 @@ public class FuelStation extends Thread{
     private int maxFuelCapacity;
     private boolean isWorking;
 
-    public FuelStation(CarWash carWash, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity) {
+    public GasStation(CarWash carWash, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity) {
         this.carWash = carWash;
         carWash.setStation(this);
         this.fuelPumps = fuelPumps;
