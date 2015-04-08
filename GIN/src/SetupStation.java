@@ -1,6 +1,6 @@
 import java.util.ArrayList;
 
-public class App {
+public class SetupStation {
 
     public static void main(String[] args) {
         ArrayList<Pump> pumps = new ArrayList<>();
