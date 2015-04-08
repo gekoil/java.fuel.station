@@ -29,11 +29,12 @@ public class Car {
 		initLog();
 	}
 
-	Car(int id, boolean needFuel, boolean needWash, int fuel, int pumpNumber) {
-		this.id = id;
-		this.needFuel = needFuel;
+	Car(boolean needWash, int fuel, int pumpNumber) {
+		this.id = carCount++;
 		this.needWash = needWash;
 		this.fuel = fuel;
+		if(fuel > 10)
+			needFuel = true;
 		this.pumpNumber = pumpNumber;
 
 		initLog();

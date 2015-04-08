@@ -60,8 +60,12 @@ public class Pump extends Thread{
                 station.requestFuel(fuelRequest);
                 car.setNeedFuel(false);
                 car.addFuel(fuelRequest);
+                sleep(200);
+                station.addCar(car);
             } catch (InterruptedException e) {
                 log.log(Level.SEVERE, e.toString());
+            } catch (Exception e1) {
+            	log.log(Level.SEVERE, e1.toString());
             }
         }
     }

@@ -27,7 +27,6 @@ public class GasStation extends Thread{
     @Override
     public void run() {
         while(!incomingCars.isEmpty() || isWorking) {
-            // TODO: Add looping on incoming cars until shutdown is called
         	if(!incomingCars.isEmpty()) {
 	        	Car next = incomingCars.pollFirst();
 	        	if(next.isNeedFuel() && !next.isNeedWash())
@@ -35,7 +34,7 @@ public class GasStation extends Thread{
 	        	else if(next.isNeedWash() && !next.isNeedFuel())
 	        		carWash.addCar(next);
 	        	else if(next.isNeedFuel() && next.isNeedWash())
-	        		if(carWash.getWaitingTime() <= fuelPumps.get(next.getPumpNumber()).getWatingTime())
+	        		if(carWash.getWaitingTime() < fuelPumps.get(next.getPumpNumber()).getWatingTime())
 	        			carWash.addCar(next);
 	        		else
 	        			fuelPumps.get(next.getPumpNumber()).addCar(next);
@@ -69,8 +68,8 @@ public class GasStation extends Thread{
         return carWash;
     }
 
-    public ArrayList<Pump> getFuelPumps() {
-        return fuelPumps;
+    public ArrayList<Pump> getFuelPumps() {  // I don't think its a good design to let someone out side the class
+        return fuelPumps;					// to touch the fuelPumps.
     }
 
     public void addFuelPump(Pump fuelPump) {
@@ -90,6 +89,9 @@ public class GasStation extends Thread{
 
 	public void setWorking(boolean isWorking) {
 		this.isWorking = isWorking;
+		carWash.setEndOfDay(isWorking);
+		for(Pump p : fuelPumps)
+			p.shutDown();
 	}
 
 	public boolean requestFuel(int fuelRequest) throws InterruptedException {

@@ -12,6 +12,8 @@ public class SetupStation {
         wash = new CarWash();
         // TODO: Read the XML file provided in args variable
         station = new GasStation(wash, pumps, 0, 1500);
+        for(int i = 0; i < 4; i++)
+        	station.addFuelPump(new Pump(station));
         station.start();
     }
 
