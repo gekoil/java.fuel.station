@@ -7,6 +7,8 @@ public class CarWash extends Thread {
 	private final int NUM_WORKERS = 3;
 	private final int TUNEL_TIME = 100;
 	
+	private static int carWashCount = 0;
+	private final int id;
 	private GasStation station;
 	private Cleaner[] cleaner = new Cleaner[NUM_WORKERS];
 	private Tunnel tunnel = new Tunnel();
@@ -15,13 +17,17 @@ public class CarWash extends Thread {
 	private boolean endOfDay = false;
 	private boolean goHome = false;
 	
+	public CarWash() {
+		this.id = carWashCount++;
+		for(int i = 0; i < NUM_WORKERS; i++)
+			cleaner[i] = new Cleaner();
+	}
+	
 	@Override
 	public void run() {
 		tunnel.start();
-		for(int i = 0; i < NUM_WORKERS; i++) {
-			cleaner[i] = new Cleaner();
+		for(int i = 0; i < NUM_WORKERS; i++)
 			cleaner[i].start();
-		}
 		try {
 			tunnel.join();
 			goHome = true;
