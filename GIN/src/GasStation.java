@@ -41,7 +41,6 @@ public class GasStation extends Thread{
 		} catch (InterruptedException e) {
 			e.getMessage();
 		}
-        System.out.println("closing opp");
     }
     
     private void organizer(Car next) {
