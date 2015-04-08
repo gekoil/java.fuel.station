@@ -41,7 +41,6 @@ public class GasStation extends Thread{
 	        			fuelPumps.get(next.getPumpNumber()).addCar(next);
         	}
         }
-        System.out.println("live");
         try {
 			carWash.join();
 			for(Pump p : fuelPumps) {
