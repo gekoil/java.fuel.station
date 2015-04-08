@@ -1,5 +1,6 @@
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GasStation extends Thread{
@@ -26,19 +27,11 @@ public class GasStation extends Thread{
 
     @Override
     public void run() {
-        while(!incomingCars.isEmpty() || isWorking) {
-        	if(!incomingCars.isEmpty()) {
-	        	Car next = incomingCars.pollFirst();
-	        	if(next.isNeedFuel() && !next.isNeedWash())
-	        		fuelPumps.get(next.getPumpNumber()).addCar(next);
-	        	else if(next.isNeedWash() && !next.isNeedFuel())
-	        		carWash.addCar(next);
-	        	else if(next.isNeedFuel() && next.isNeedWash())
-	        		if(carWash.getWaitingTime() < fuelPumps.get(next.getPumpNumber()).getWatingTime())
-	        			carWash.addCar(next);
-	        		else
-	        			fuelPumps.get(next.getPumpNumber()).addCar(next);
-        	}
+    	log.log(Level.INFO, "The Station is open");
+    	carWash.start();
+        while(isWorking || !incomingCars.isEmpty()) {
+        	if(!incomingCars.isEmpty())
+        		organizer(incomingCars.pollFirst());
         }
         try {
 			carWash.join();
@@ -48,6 +41,19 @@ public class GasStation extends Thread{
 		} catch (InterruptedException e) {
 			e.getMessage();
 		}
+        System.out.println("closing opp");
+    }
+    
+    private void organizer(Car next) {
+    	if(next.isNeedFuel() && !next.isNeedWash())
+    		fuelPumps.get(next.getPumpNumber()).addCar(next);
+    	else if(next.isNeedWash() && !next.isNeedFuel())
+    		carWash.addCar(next);
+    	else if(next.isNeedFuel() && next.isNeedWash())
+    		if(carWash.getWaitingTime() < fuelPumps.get(next.getPumpNumber()).getWatingTime())
+    			carWash.addCar(next);
+    		else
+    			fuelPumps.get(next.getPumpNumber()).addCar(next);
     }
     
     public void payForServise(double money) {
@@ -89,7 +95,7 @@ public class GasStation extends Thread{
 
 	public void setWorking(boolean isWorking) {
 		this.isWorking = isWorking;
-		carWash.setEndOfDay(isWorking);
+		carWash.setEndOfDay();
 		for(Pump p : fuelPumps)
 			p.shutDown();
 	}
@@ -112,7 +118,7 @@ public class GasStation extends Thread{
         synchronized (fuelReserve) {
             fuelReserve += fuelRefill;
         }
-        fuelReserve.notify();
+        fuelReserve.notifyAll();
     }
     
 }

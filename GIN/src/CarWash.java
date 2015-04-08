@@ -48,8 +48,8 @@ public class CarWash extends Thread {
 		wakeUP();
 	}
 	
-	public void setEndOfDay(boolean end) {
-		endOfDay = end;
+	public void setEndOfDay() {
+		endOfDay = true;
 		wakeUP();
 	}
 	
@@ -111,13 +111,14 @@ public class CarWash extends Thread {
 		public void run() {
 			while(!endOfDay || !waitingToWash.isEmpty()) {
 				Car c = getCarOut();
-				try {
-					sleep(1000);
-					waitingToIntern.addLast(c);
-					wakeUP();
-				} catch (InterruptedException | NullPointerException e) {
-					e.printStackTrace();
-				}
+				if(c != null)
+					try {
+						sleep(1000);
+						waitingToIntern.addLast(c);
+						wakeUP();
+					} catch (InterruptedException | NullPointerException e) {
+						e.printStackTrace();
+					}
 			}
 		}
 		
@@ -134,16 +135,17 @@ public class CarWash extends Thread {
 		public void run() {
 			while(!goHome || !waitingToIntern.isEmpty()) {
 				Car c = getCarIn();
-				try {
-					sleep(efficiency);
-					c.setWash(false);
-					station.payForServise(50.5);
-					station.addCar(c);
-				} catch (InterruptedException | NullPointerException e) {
-					e.printStackTrace();
-				} catch (Exception e1) {
-					e1.getMessage();
-				}
+				if(c != null)
+					try {
+						sleep(efficiency);
+						c.setWash(false);
+						station.payForServise(50.5);
+						station.addCar(c);
+					} catch (InterruptedException | NullPointerException e) {
+						e.getMessage();
+					} catch (Exception e1) {
+						e1.getMessage();
+					}
 			}
 		}
 
