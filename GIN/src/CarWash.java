@@ -137,9 +137,12 @@ public class CarWash extends Thread {
 				try {
 					sleep(efficiency);
 					c.setWash(false);
+					station.payForServise(50.5);
 					station.addCar(c);
 				} catch (InterruptedException | NullPointerException e) {
 					e.printStackTrace();
+				} catch (Exception e1) {
+					e1.getMessage();
 				}
 			}
 		}

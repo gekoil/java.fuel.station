@@ -10,6 +10,8 @@ public class GasStation extends Thread{
     private ArrayDeque<Car> incomingCars;
     private Integer fuelReserve;
     private int maxFuelCapacity;
+    private Double profits = 0.0;
+    private boolean pay = false;
     private boolean isWorking;
 
     public GasStation(CarWash carWash, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity) {
@@ -24,7 +26,7 @@ public class GasStation extends Thread{
 
     @Override
     public void run() {
-        while(isWorking || !incomingCars.isEmpty()) {
+        while(!incomingCars.isEmpty() || isWorking) {
             // TODO: Add looping on incoming cars until shutdown is called
         	if(!incomingCars.isEmpty()) {
 	        	Car next = incomingCars.pollFirst();
@@ -39,6 +41,7 @@ public class GasStation extends Thread{
 	        			fuelPumps.get(next.getPumpNumber()).addCar(next);
         	}
         }
+        System.out.println("live");
         try {
 			carWash.join();
 			for(Pump p : fuelPumps) {
@@ -46,6 +49,20 @@ public class GasStation extends Thread{
 			}
 		} catch (InterruptedException e) {
 			e.getMessage();
+		}
+    }
+    
+    public void payForServise(double money) {
+    	synchronized (profits) {
+			if(pay)
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					e.getMessage();
+				}
+			pay = true;
+			profits += money;
+			notifyAll();
 		}
     }
 
@@ -61,8 +78,11 @@ public class GasStation extends Thread{
         fuelPumps.add(fuelPump);
     }
 
-    public void addCar(Car car) {
-        incomingCars.addLast(car);
+    public void addCar(Car car) throws Exception {
+    	if(isWorking)
+    		incomingCars.addLast(car);
+    	else
+    		throw new Exception("Cant add more cars today.");
     }
 
     public boolean isWorking() {
