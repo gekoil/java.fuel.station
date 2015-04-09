@@ -7,18 +7,26 @@ public class menu {
 	public static void main(String[] args) {
 		String fileName = "starter.xml";
 		File xmlFile = new File(fileName);
-		SetupStation starter = new SetupStation(xmlFile);
+		Scanner in = new Scanner(System.in);
+		System.out.println("How much workers do you want in the car wash?");
+		int workers = in.nextInt();
+		SetupStation starter = new SetupStation(xmlFile,workers);
 		GasStation gasSt = starter.getStation();
+		for(int i = 0; i < 10; i++)
+			try {
+				gasSt.addCar(new Car());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		boolean endOfDay = false;
 		char choose;
-		Scanner in = new Scanner(System.in);
 		System.out.println("\tWelcome to The Gas station!\n\n");
 		while(!endOfDay) {
 			System.out.println("What do you want to do now?\n"
 					+ "1) Add car to the gas station.\n"
 					+ "2) Add fuel to the gas station.\n"
-					+ "3) Closed the Gas Station.\n");
-			choose = in.nextLine().charAt(0);
+					+ "3) Close the Gas Station.\n");
+			choose = in.next().charAt(0);
 			switch(choose) {
 			case '1': addCar(gasSt);
 				break;

@@ -6,12 +6,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Pump extends Thread{
-    private static final Logger log = Logger.getLogger(Pump.class.getName());
-    private static int pumpCount;
-
+    private final Logger log = Logger.getLogger(Pump.class.getName());
+    
+    private static int pumpCount = 0;
+    private String logId;
     private int id;
     private GasStation station;
-    private boolean isRunning;
+    private boolean isRunning = true;
     private BlockingQueue<Car> cars;
 	
     public  Pump(GasStation station) {
@@ -20,13 +21,17 @@ public class Pump extends Thread{
         cars = new LinkedBlockingDeque<>();
 
         FileHandler theHandler;
+        logId = "Pump no." + id + " ";
         try {
             theHandler = new FileHandler("pump_" + id + ".txt");
             theHandler.setFormatter(new CustomFormatter());
+            theHandler.setFilter(new FilesFilter(logId));
             log.addHandler(theHandler);
+            log.setUseParentHandlers(false);
         } catch (SecurityException | IOException e) {
             e.printStackTrace();
         }
+        log.info(logId + "is ready to Work.");
     }
 
     public void setStation(GasStation station) {
@@ -37,7 +42,7 @@ public class Pump extends Thread{
         try {
             cars.put(car);
         } catch (InterruptedException e) {
-            log.log(Level.SEVERE, e.toString());
+            log.severe(e.toString());
         }
     }
 
@@ -51,22 +56,22 @@ public class Pump extends Thread{
 
     @Override
     public void run() {
-        // TODO: Add execution here
-        isRunning = true;
-        while(isRunning) {
+        while(!cars.isEmpty() || isRunning) {
             try {
                 Car car = cars.take();
                 int fuelRequest = car.getFuel();
                 station.requestFuel(fuelRequest);
-                car.setNeedFuel(false);
                 car.addFuel(fuelRequest);
-                sleep(200);
+                sleep(5*fuelRequest);
+                double price = station.getFuelCost()*fuelRequest;
+                station.payForServise(price);
                 station.addCar(car);
             } catch (InterruptedException e) {
-                log.log(Level.SEVERE, e.toString());
+                log.severe(e.toString());
             } catch (Exception e1) {
-            	log.log(Level.SEVERE, e1.toString());
+            	log.severe(e1.toString());
             }
         }
+        log.info(logId + "is close.");
     }
 }

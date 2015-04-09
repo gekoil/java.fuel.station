@@ -1,37 +1,40 @@
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class CarWash extends Thread {
 	private static final Logger log = Logger.getLogger(CarWash.class.getName());
 
-	private final int NUM_WORKERS = 3;
 	private final int TUNEL_TIME = 100;
 	
+	private static int workerCount = 0;
+	private int numWorkers;
 	private static int carWashCount = 0;
 	private final int id;
 	private GasStation station;
-	private Cleaner[] cleaner = new Cleaner[NUM_WORKERS];
+	private ArrayList<Cleaner> cleaners = new ArrayList<CarWash.Cleaner>();
 	private Tunnel tunnel = new Tunnel();
 	private ArrayDeque<Car> waitingToIntern = new ArrayDeque<Car>();
 	private ArrayDeque<Car> waitingToWash = new ArrayDeque<Car>();
 	private boolean endOfDay = false;
 	private boolean goHome = false;
 	
-	public CarWash() {
+	public CarWash(int numWorkers) {
 		this.id = carWashCount++;
-		for(int i = 0; i < NUM_WORKERS; i++)
-			cleaner[i] = new Cleaner();
+		this.numWorkers = numWorkers;
+		for(int i = 0; i < numWorkers; i++)
+			cleaners.add(new Cleaner());
 	}
 	
 	@Override
 	public void run() {
 		tunnel.start();
-		for(int i = 0; i < NUM_WORKERS; i++)
-			cleaner[i].start();
+		for(Cleaner cln : cleaners)
+			cln.start();
 		try {
 			tunnel.join();
 			goHome = true;
-			for(Cleaner cln : cleaner) {
+			for(Cleaner cln : cleaners) {
 				wakeUP();
 				cln.join();
 			}
@@ -59,29 +62,20 @@ public class CarWash extends Thread {
 		wakeUP();
 	}
 	
-	public int getNUM_WORKERS() {
-		return NUM_WORKERS;
+	public int getNumWorkers() {
+		return numWorkers;
 	}
 
 	public boolean isEndOfDay() {
 		return endOfDay;
 	}
 	
-	public void allLeft() throws InterruptedException {
-		int bye = 0;
-		while(bye < NUM_WORKERS) {
-			wakeUP();
-			cleaner[bye].join();
-			bye++;
-		}
-	}
-
 	public int getWaitingTime() {
 		int time = TUNEL_TIME * waitingToWash.size();
 		int timeIn = 0;
-		for(Cleaner cln : cleaner)
+		for(Cleaner cln : cleaners)
 			timeIn += cln.getEfficiency();
-		time += waitingToIntern.size() * (timeIn/NUM_WORKERS);
+		time += waitingToIntern.size() * (timeIn/numWorkers);
 		return time;
 	}
 	
@@ -133,10 +127,13 @@ public class CarWash extends Thread {
 	class Cleaner extends Thread {
 
 		private int efficiency = 500 + (int)Math.random() * (1001);
+		private final int id = workerCount++;
 
 		public int getEfficiency() {
 			return efficiency;
 		}
+		
+		
 
 		public void run() {
 			while(!goHome || !waitingToIntern.isEmpty()) {
@@ -144,8 +141,8 @@ public class CarWash extends Thread {
 				if(c != null)
 					try {
 						sleep(efficiency);
-						c.setWash(false);
-						station.payForServise(50.5);
+						c.setWashed(id);
+						station.payForServise(50.0);
 						station.addCar(c);
 					} catch (InterruptedException | NullPointerException e) {
 						e.getMessage();
