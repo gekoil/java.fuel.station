@@ -1,5 +1,7 @@
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 public class CarWash extends Thread {
@@ -18,12 +20,25 @@ public class CarWash extends Thread {
 	private ArrayDeque<Car> waitingToWash = new ArrayDeque<Car>();
 	private boolean endOfDay = false;
 	private boolean goHome = false;
+	private String logId;
 	
 	public CarWash(int numWorkers) {
 		this.id = carWashCount++;
 		this.numWorkers = numWorkers;
 		for(int i = 0; i < numWorkers; i++)
 			cleaners.add(new Cleaner());
+		FileHandler theHandler;
+        logId = "CarWash no." + id + " ";
+        try {
+            theHandler = new FileHandler("wash_" + id + ".txt");
+            theHandler.setFormatter(new CustomFormatter());
+            theHandler.setFilter(new FilesFilter(logId));
+            log.addHandler(theHandler);
+            log.setUseParentHandlers(false);
+        } catch (SecurityException | IOException e) {
+            e.printStackTrace();
+        }
+        log.info(logId + "is ready to Work.");
 	}
 	
 	@Override
@@ -38,6 +53,7 @@ public class CarWash extends Thread {
 				wakeUP();
 				cln.join();
 			}
+			log.info(logId + "is close.");
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -120,6 +136,7 @@ public class CarWash extends Thread {
 						e.printStackTrace();
 					}
 			}
+			log.info(logId + "The tunnel close.");
 		}
 		
 	}
@@ -127,13 +144,11 @@ public class CarWash extends Thread {
 	class Cleaner extends Thread {
 
 		private int efficiency = 500 + (int)Math.random() * (1001);
-		private final int id = workerCount++;
+		private final int workerId = workerCount++;
 
 		public int getEfficiency() {
 			return efficiency;
 		}
-		
-		
 
 		public void run() {
 			while(!goHome || !waitingToIntern.isEmpty()) {
@@ -141,7 +156,7 @@ public class CarWash extends Thread {
 				if(c != null)
 					try {
 						sleep(efficiency);
-						c.setWashed(id);
+						c.setWashed(workerId);
 						station.payForServise(50.0);
 						station.addCar(c);
 					} catch (InterruptedException | NullPointerException e) {
@@ -150,6 +165,7 @@ public class CarWash extends Thread {
 						e1.getMessage();
 					}
 			}
+			log.info(logId + "Worker " + workerId + " go home.");
 		}
 
 	}
