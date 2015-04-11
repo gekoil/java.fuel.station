@@ -1,19 +1,18 @@
 import java.io.IOException;
 import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Car {
-	private final static Logger log = Logger.getLogger(Car.class.getName());
+	private final static Logger log = Logger.getLogger(Global.PROJECT_LOG_NAME);
 
-    private static int carCount = 0;
-    private String logId;
-    private int id;
+	private static int carCount = 0;
+	private String logId;
+	private int id;
 	private int fuel;
 	private final int pumpNumber;
 	private boolean needWash = false;
 	private boolean needFuel = false;
-	
+
 	Car() {
 		if(((int)(Math.random()*2)) > 0)
 			needWash = true;
@@ -26,22 +25,26 @@ public class Car {
 			fuel = 0;
 			pumpNumber = 0;
 		}
-        id = carCount++;
+		id = carCount++;
 		initLog();
 	}
 
-	Car(boolean needWash, int fuel, int pumpNumber) {
-		this.id = carCount++;
+	Car(int id, boolean needWash, boolean needFuel,int fuel, int pumpNumber) {
+		if(id >= 0) {
+			this.id = id;
+			carCount++;
+		} else {
+			this.id = carCount++;
+		}
 		this.needWash = needWash;
 		this.fuel = fuel;
-		if(fuel > 10)
-			needFuel = true;
+		this.needFuel = needFuel;
 		this.pumpNumber = pumpNumber;
 		initLog();
 	}
-	
+
 	private String fileName() {
-		return "car_" + id + ".txt";
+		return "logs\\car_" + id + ".txt";
 	}
 
 	private void initLog() {
@@ -53,10 +56,10 @@ public class Car {
 			theHandler.setFilter(new FilesFilter(logId));
 			log.addHandler(theHandler);
 			log.setUseParentHandlers(false);
-			log.info("\n" + logId + " entered the station.\n"
-					+ "\tFuel needed: " + fuel + ".\n"
-					+ "\tPump nomber: " + pumpNumber + ".\n"
-					+ "\tNeed wash: " + needWash + ".\n");
+			log.info("\n" + logId + " entered the station. "
+					+ "\tFuel needed: " + fuel + ". "
+					+ "\tPump number: " + pumpNumber + ". "
+					+ "\tNeed wash: " + needWash + ". ");
 		} catch (SecurityException | IOException e) {
 			e.printStackTrace();
 		}
@@ -81,9 +84,9 @@ public class Car {
 		log.info(logId +" get washed by worker no." + id +".");
 	}
 
-    public int getId() {
-        return id;
-    }
+	public int getId() {
+		return id;
+	}
 
 	public boolean isNeedFuel() {
 		return needFuel;
@@ -96,9 +99,9 @@ public class Car {
 	public int getPumpNumber() {
 		return pumpNumber;
 	}
-	
+
 	public void leaveStation() {
 		log.info(logId + " Leave station.");
 	}
-	
+
 }

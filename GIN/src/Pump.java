@@ -2,28 +2,27 @@ import java.io.IOException;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class Pump extends Thread{
-    private final Logger log = Logger.getLogger(Pump.class.getName());
-    
+public class Pump extends Thread {
+    private final Logger log = Logger.getLogger(Global.PROJECT_LOG_NAME);
+    private static final int SECONDS_PER_LITER = 50;
+
     private static int pumpCount = 0;
     private String logId;
     private int id;
     private GasStation station;
-    private boolean isRunning = true;
+    private volatile boolean isRunning = true;
     private BlockingQueue<Car> cars;
-	
-    public  Pump(GasStation station) {
+
+    public  Pump() {
         id = pumpCount++;
-        setStation(station);
         cars = new LinkedBlockingDeque<>();
 
         FileHandler theHandler;
         logId = "Pump no." + id + " ";
         try {
-            theHandler = new FileHandler("pump_" + id + ".txt");
+            theHandler = new FileHandler("logs\\pump_" + id + ".txt");
             theHandler.setFormatter(new CustomFormatter());
             theHandler.setFilter(new FilesFilter(logId));
             log.addHandler(theHandler);
@@ -41,6 +40,7 @@ public class Pump extends Thread{
     public void addCar(Car car) {
         try {
             cars.put(car);
+            log.info(logId + "Added car " + car.getId() + " to waiting line");
         } catch (InterruptedException e) {
             log.severe(e.toString());
         }
@@ -48,30 +48,45 @@ public class Pump extends Thread{
 
     public void shutDown() {
         this.isRunning = false;
+        log.info(logId + "is closing down, handling remaining cars");
     }
-    
-    public int getWatingTime() {
-    	return cars.size()*100;
+
+    public int getWaitingTime() {
+        int time = 0;
+        for(Car car : cars) {
+            time += car.getFuel() * SECONDS_PER_LITER;
+        }
+        return time;
     }
 
     @Override
     public void run() {
-        while(!cars.isEmpty() || isRunning) {
+        while(isRunning || !cars.isEmpty()) {
             try {
+                if(cars.isEmpty()) {
+                    continue;
+                }
                 Car car = cars.take();
                 int fuelRequest = car.getFuel();
+                log.info(logId + "requesting " + fuelRequest + " Liters from station");
                 station.requestFuel(fuelRequest);
                 car.addFuel(fuelRequest);
-                sleep(5*fuelRequest);
-                double price = station.getFuelCost()*fuelRequest;
-                station.payForServise(price);
-                station.addCar(car);
-            } catch (InterruptedException e) {
+                log.info(logId + "got fuel for car " + car.getId() + ", now charging money");
+                sleep(SECONDS_PER_LITER * fuelRequest);
+                double price = station.getFuelCost() * fuelRequest;
+                station.payForFuel(price);
+                if(isRunning) {
+                    station.addCar(car);
+                } else {
+                    car.leaveStation();
+                }
+                log.info(logId + "car " + car.getId() + "returned to station");
+            } catch (Exception e) {
                 log.severe(e.toString());
-            } catch (Exception e1) {
-            	log.severe(e1.toString());
             }
         }
+
         log.info(logId + "is close.");
+        station.reportPumpClosed(id);
     }
 }

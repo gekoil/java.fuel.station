@@ -5,42 +5,44 @@ import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 
 public class CarWash extends Thread {
-	private static final Logger log = Logger.getLogger(CarWash.class.getName());
+	private static final Logger log = Logger.getLogger(Global.PROJECT_LOG_NAME);
 
-	private final int TUNEL_TIME = 100;
-	
 	private static int workerCount = 0;
-	private int numWorkers;
 	private static int carWashCount = 0;
+	private int numWorkers;
+	private int autoCleanTime;
 	private final int id;
+	private double washCost;
 	private GasStation station;
-	private ArrayList<Cleaner> cleaners = new ArrayList<CarWash.Cleaner>();
+	private ArrayList<Cleaner> cleaners = new ArrayList<>();
 	private Tunnel tunnel = new Tunnel();
-	private ArrayDeque<Car> waitingToIntern = new ArrayDeque<Car>();
-	private ArrayDeque<Car> waitingToWash = new ArrayDeque<Car>();
+	private ArrayDeque<Car> waitingToIntern = new ArrayDeque<>();
+	private ArrayDeque<Car> waitingToWash = new ArrayDeque<>();
 	private boolean endOfDay = false;
 	private boolean goHome = false;
 	private String logId;
-	
-	public CarWash(int numWorkers) {
+
+	public CarWash(int numWorkers, double washCost, int autoCleanTime) {
 		this.id = carWashCount++;
 		this.numWorkers = numWorkers;
+		this.autoCleanTime = autoCleanTime;
+		this.washCost = washCost;
 		for(int i = 0; i < numWorkers; i++)
 			cleaners.add(new Cleaner());
 		FileHandler theHandler;
-        logId = "CarWash no." + id + " ";
-        try {
-            theHandler = new FileHandler("wash_" + id + ".txt");
-            theHandler.setFormatter(new CustomFormatter());
-            theHandler.setFilter(new FilesFilter(logId));
-            log.addHandler(theHandler);
-            log.setUseParentHandlers(false);
-        } catch (SecurityException | IOException e) {
-            e.printStackTrace();
-        }
-        log.info(logId + "is ready to Work.");
+		logId = "CarWash no." + id + " ";
+		try {
+			theHandler = new FileHandler("logs\\wash_" + id + ".txt");
+			theHandler.setFormatter(new CustomFormatter());
+			theHandler.setFilter(new FilesFilter(logId));
+			log.addHandler(theHandler);
+			log.setUseParentHandlers(false);
+		} catch (SecurityException | IOException e) {
+			e.printStackTrace();
+		}
+		log.info(logId + "is ready to Work.");
 	}
-	
+
 	@Override
 	public void run() {
 		tunnel.start();
@@ -58,7 +60,7 @@ public class CarWash extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public GasStation getStation() {
 		return station;
 	}
@@ -72,12 +74,12 @@ public class CarWash extends Thread {
 		waitingToWash.addLast(c);
 		wakeUP();
 	}
-	
+
 	public void setEndOfDay() {
 		endOfDay = true;
 		wakeUP();
 	}
-	
+
 	public int getNumWorkers() {
 		return numWorkers;
 	}
@@ -85,16 +87,16 @@ public class CarWash extends Thread {
 	public boolean isEndOfDay() {
 		return endOfDay;
 	}
-	
+
 	public int getWaitingTime() {
-		int time = TUNEL_TIME * waitingToWash.size();
+		int time = autoCleanTime * waitingToWash.size();
 		int timeIn = 0;
 		for(Cleaner cln : cleaners)
 			timeIn += cln.getEfficiency();
 		time += waitingToIntern.size() * (timeIn/numWorkers);
 		return time;
 	}
-	
+
 	public synchronized Car getCarOut() {
 		while(waitingToWash.isEmpty() && !endOfDay) {
 			try {
@@ -116,11 +118,11 @@ public class CarWash extends Thread {
 		}
 		return waitingToIntern.pollFirst();
 	}
-	
+
 	public synchronized void wakeUP() {
 		notifyAll();
 	}
-	
+
 	class Tunnel extends Thread {
 
 		@Override
@@ -129,21 +131,20 @@ public class CarWash extends Thread {
 				Car c = getCarOut();
 				if(c != null)
 					try {
-						sleep(1000);
+						sleep(autoCleanTime * 1000);
 						waitingToIntern.addLast(c);
 						wakeUP();
 					} catch (InterruptedException | NullPointerException e) {
 						e.printStackTrace();
 					}
 			}
-			log.info(logId + "The tunnel close.");
+			log.info(logId + "The tunnel is closed.");
 		}
-		
 	}
-	
+
 	class Cleaner extends Thread {
 
-		private int efficiency = 500 + (int)Math.random() * (1001);
+		private int efficiency = 500 + (int)(Math.random() * 1001);
 		private final int workerId = workerCount++;
 
 		public int getEfficiency() {
@@ -157,17 +158,13 @@ public class CarWash extends Thread {
 					try {
 						sleep(efficiency);
 						c.setWashed(workerId);
-						station.payForServise(50.0);
+						station.payForWash(washCost);
 						station.addCar(c);
-					} catch (InterruptedException | NullPointerException e) {
+					} catch (Exception e) {
 						e.getMessage();
-					} catch (Exception e1) {
-						e1.getMessage();
 					}
 			}
 			log.info(logId + "Worker " + workerId + " go home.");
 		}
-
 	}
-	
 }
