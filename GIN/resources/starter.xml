@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <GasStation numOfPumps="4" pricePerLiter="7.82">
-    <MainFuelPool maxCapacity="500" currentCapacity="220" />
+    <MainFuelPool maxCapacity="500" currentCapacity="250" />
     <CleaningService numOfTeams="3" price="40" secondsPerAutoClean="15" />
     <Cars>
         <Car id="111" wantCleaning="true">

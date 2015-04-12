@@ -72,15 +72,15 @@ public class SetupStation {
             }
             wash = new CarWash(3, 50.0, 1000);
             station = new GasStation(wash, pumps, 0, 1500, 6.25);
-            for(int i = 0; i < 10; i++) {
-                try {
-                    station.addCar(new Car());
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
         }
         station.start();
+        for(int i = 0; i < 10; i++) {
+            try {
+                station.addCar(new Car());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return station;
     }
 

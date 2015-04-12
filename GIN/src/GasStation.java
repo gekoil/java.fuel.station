@@ -161,12 +161,19 @@ public class GasStation extends Thread {
     	synchronized(tank) {
     		while(tank.getFuel() < fuelRequest) {
     			try {
+    				if(tank.getFuel() < tank.getLow())
+    					tank.setFull();
 					wait();
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				}
     		}
-            tank.setFuel(-fuelRequest);
+            try {
+				tank.setFuel(-fuelRequest);
+			} catch (Exception e) {
+				log.info(e.getMessage());
+				tank.setFull();
+			}
             log.info("The fule reserve have now: " + tank.getFuel() + " liters.");
             tank.notifyAll();
             
@@ -181,60 +188,45 @@ public class GasStation extends Thread {
         return tank.getMax();
     }
     
-    public void addFuel() {
-    	tank.reFull();
+    public void addFuel(int fuel) {
+    	requestFuel(fuel);
     }
     
     class FuelTank {
     	private int fuel;
     	private final int MAX;
-    	private boolean inUse;
     	
     	public FuelTank(int fuel,int max) {
     		this.fuel = fuel;
     		this.MAX = max;
-    		inUse = false;
     	}
     	
-    	public synchronized void reFull() {
-			try {
-				log.info("The fuel tanker is here.");
-				sleep(200);
+    	public synchronized void setFull() {
+    		try {
+				sleep(300);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
-			} finally {
-				setFuel(MAX-fuel);
+				log.info(e.toString());
 			}
+    		fuel = MAX;
     	}
+    	
     	
 		public int getFuel() {
 			return fuel;
 		}
-		public void setFuel(int reqFuel) {
+		public void setFuel(int reqFuel) throws Exception {
 			this.fuel += reqFuel;
 			log.info(logId + "The fuel reserve capacity is now " + fuel + " Liters.");
-			if(fuel < MAX*0.2) {
-				log.info("The fuel Tank is lower then 20%!");
-				Thread fuelTank = new Thread(new Runnable() {
-					@Override
-					public void run() {
-						log.info("Calling for refill.");
-						reFull();
-					}
-				});
-				fuelTank.start();
+			if(fuel < getLow()) {
+				throw new Exception("The fuel reserved is less then 20%");
 			}
 		}
 		public int getMax() {
 			return MAX;
 		}
-
-		public boolean isInUse() {
-			return inUse;
-		}
-
-		public void setInUse(boolean inUse) {
-			this.inUse = inUse;
+		
+		public int getLow() {
+			return (int)( MAX*0.2);
 		}
 		
     }
