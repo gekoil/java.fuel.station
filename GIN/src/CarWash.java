@@ -25,12 +25,14 @@ public class CarWash extends Thread {
 	private boolean endOfDay = false;
 	private boolean goHome = false;
 	private String logId;
+	private boolean pollingCar;
 
 	public CarWash(int numWorkers, double washCost, int autoCleanTime) {
 		this.id = carWashCount++;
 		this.numWorkers = numWorkers;
 		this.autoCleanTime = autoCleanTime;
 		this.washCost = washCost;
+		this.pollingCar = false;
 		waitingToWash = new LinkedBlockingDeque<Car>();
 		waitingToIntern =  new LinkedBlockingDeque<Car>();
 		initLog();
@@ -78,7 +80,6 @@ public class CarWash extends Thread {
 		this.station = station;
 	}
 
-
 	public void addCar(Car c) {
 		try {
 			waitingToWash.put(c);
@@ -107,6 +108,23 @@ public class CarWash extends Thread {
 		time += waitingToIntern.size() * (timeIn/numWorkers);
 		return time;
 	}
+	
+	private Car internCar() {
+		synchronized (waitingToIntern) {
+			while(pollingCar) {
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					log.info(e.toString());
+				}
+			}
+			pollingCar = true;
+			Car c = waitingToIntern.poll();
+			pollingCar = false;
+			waitingToIntern.notifyAll();
+			return c;
+		}
+	}
 
 	class Tunnel extends Thread {
 
@@ -118,6 +136,7 @@ public class CarWash extends Thread {
 					if(c == null)
 						continue;
 					sleep(autoCleanTime * 500);
+					log.info(logId + " Car " + c.getId() + " get out from the tunnel.");
 					waitingToIntern.put(c);
 				} catch (InterruptedException | NullPointerException e) {
 					e.printStackTrace();
@@ -129,23 +148,32 @@ public class CarWash extends Thread {
 
 	class Cleaner extends Thread {
 
-		private int efficiency = 500 + (int)(Math.random() * 501);
-		private final int workerId = workerCount++;
+		private final int EFFICIENCY;
+		private final int WORKER_ID;
+		
+		public Cleaner() {
+			WORKER_ID = workerCount++;
+			EFFICIENCY = 500 + (int)(Math.random() * 501);
+		}
+
+		public int getWORKER_ID() {
+			return WORKER_ID;
+		}
 
 		public int getEfficiency() {
-			return efficiency;
+			return EFFICIENCY;
 		}
 
 		public void run() {
-			log.info(logId + "Worker no." + workerId + "start working.");
+			log.info(logId + "Worker no." + WORKER_ID + "start working.");
 			while(!goHome || !waitingToIntern.isEmpty()) {
 				try {
-					Car c = waitingToIntern.poll();
+					Car c = internCar();
 					if(c == null)
 						continue;
-					sleep(efficiency);
-					c.setWashed(workerId);
-					log.info(logId + "done clean Car " + c.getId() + " by worker " + workerId);
+					sleep(EFFICIENCY);
+					c.setWashed(WORKER_ID);
+					log.info(logId + "done clean Car " + c.getId() + " by worker " + WORKER_ID);
 					station.payForWash(washCost);
 					if(!goHome)
 						station.addCar(c);
@@ -156,7 +184,7 @@ public class CarWash extends Thread {
 					e.getMessage();
 				}
 			}
-			log.info(logId + "Worker " + workerId + " go home.");
+			log.info(logId + "Worker " + WORKER_ID + " go home.");
 		}
 	}
 }
