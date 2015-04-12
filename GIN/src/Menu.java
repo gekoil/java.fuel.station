@@ -33,8 +33,7 @@ public class Menu {
                     try {
                         gasSt.join();
                     } catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
+                    	System.out.println("There is a problem in the closing process.");
                     }
                 case '3': // Getting the end of day report is also part of the shut down sequence
                     Report report = gasSt.getStats();
