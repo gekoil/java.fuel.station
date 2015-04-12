@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 public class Pump extends Thread {
     private final Logger log = Logger.getLogger(Global.PROJECT_LOG_NAME);
-    private static final int SECONDS_PER_LITER = 5;
+    private static final int SECONDS_PER_LITER = 50;
 
     private static int pumpCount = 0;
     private String logId;
@@ -91,6 +91,6 @@ public class Pump extends Thread {
             }
         }
         log.info(logId + "is close.");
-        station.reportPumpClosed(id);
+//        station.reportPumpClosed(id);
     }
 }

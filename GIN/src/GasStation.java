@@ -20,8 +20,6 @@ public class GasStation extends Thread {
     private int carsFueled;
     private Double fuelProfits;
     private Double washProfits;
-    private boolean payingForWash;
-    private boolean payingForFuel;
     private boolean isWorking;
     private double fuelCost;
     private String logId;
@@ -41,8 +39,6 @@ public class GasStation extends Thread {
         this.fuelCost = fuelCost;
         fuelProfits = 0.0;
         washProfits = 0.0;
-        payingForWash = false;
-        payingForFuel = false;
         initLog();
     }
 
@@ -53,27 +49,19 @@ public class GasStation extends Thread {
         for(Pump p : fuelPumps)
             p.start();
         while(isWorking || !incomingCars.isEmpty()) {
-            try {
-				Car next = incomingCars.take();
-				if(next != null)
-	            	organizer(next);
-			} catch (InterruptedException e) {
-				log.info(e.toString());
-			}
+			Car next = incomingCars.poll();
+			if(next != null)
+            	organizer(next);
         }
         log.info("Start a closing procedure.");
         try {
-            carWash.join();
-            System.out.println("close wash");
             for(Pump p : fuelPumps) {
                 p.shutDown();
-            }
-            while (workingPumps > 0) {
-                wait();
             }
             for(Pump p : fuelPumps) {
                 p.join();
             }
+            carWash.join();
         } catch (InterruptedException e) {
             log.info(e.getMessage());
         }
@@ -168,8 +156,6 @@ public class GasStation extends Thread {
     public void setWorking(boolean isWorking) {
         this.isWorking = isWorking;
         carWash.setEndOfDay();
-        for(Pump p : fuelPumps)
-            p.shutDown();
     }
 
     public void requestFuel(int fuelRequest) {
@@ -185,16 +171,6 @@ public class GasStation extends Thread {
             log.info("The fule reserve have now: " + tank.getFuel() + " liters.");
             tank.notifyAll();
             
-        }
-    }
-
-    public void reportPumpClosed(int pumpId) {
-        for (Pump pump : fuelPumps) {
-            if (pump.getId() == pumpId) {
-                workingPumps--;
-                notifyAll();
-                return;
-            }
         }
     }
 

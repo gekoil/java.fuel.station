@@ -117,7 +117,7 @@ public class CarWash extends Thread {
 					Car c = waitingToWash.poll();
 					if(c == null)
 						continue;
-					sleep(autoCleanTime * 5);
+					sleep(autoCleanTime * 500);
 					waitingToIntern.put(c);
 				} catch (InterruptedException | NullPointerException e) {
 					e.printStackTrace();
