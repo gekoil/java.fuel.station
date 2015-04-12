@@ -87,7 +87,7 @@ public class Pump extends Thread {
                 }
                 log.info(logId + "car " + car.getId() + "returned to station");
             } catch (Exception e) {
-                log.severe(e.toString());
+                log.severe(logId + e.getStackTrace());
             }
         }
         log.info(logId + "is close.");

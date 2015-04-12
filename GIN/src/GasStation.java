@@ -71,11 +71,12 @@ public class GasStation extends Thread {
     private void initLog() {
         FileHandler handler;
         try {
+            logId = "Gas Station " + id + ":";
             handler = new FileHandler("logs\\gasStation_" + id + ".txt");
             handler.setFormatter(new CustomFormatter());
+            handler.setFilter(new FilesFilter(logId));
             log.addHandler(handler);
             log.setUseParentHandlers(false);
-            logId = "Gas Station " + id + ":";
         } catch (SecurityException | IOException e) {
             e.getMessage();
         }
@@ -111,13 +112,33 @@ public class GasStation extends Thread {
 
     public void payForWash(double money) {
         synchronized (washProfits) {
-        	washProfits += money;
+            while(payingWash) {
+                try {
+                    washProfits.wait();
+                } catch (InterruptedException e) {
+                    log.severe(logId + e.getStackTrace());
+                }
+            }
+            payingWash = true;
+            washProfits += money;
+            payingWash = false;
+            washProfits.notifyAll();
         }
     }
 
     public void payForFuel(double money) {
         synchronized (fuelProfits) {
-        	fuelProfits += money;
+            while(payingFuel) {
+                try {
+                    fuelProfits.wait();
+                } catch (InterruptedException e) {
+                    log.severe(logId + e.getStackTrace());
+                }
+            }
+            payingFuel = true;
+            fuelProfits += money;
+            payingFuel = false;
+            fuelProfits.notifyAll();
         }
     }
 
@@ -155,8 +176,8 @@ public class GasStation extends Thread {
 
     public void setWorkingOff() {
     	carWash.setEndOfDay();
-    	try {
-			carWash.join();
+        try {
+            carWash.join();
 		} catch (InterruptedException e) {
 			log.info(e.toString());
 		}
@@ -169,7 +190,7 @@ public class GasStation extends Thread {
     			try {
     				if(tank.getFuel() < tank.getLow())
     					tank.setFull();
-					wait();
+					tank.wait();
 				} catch (InterruptedException e) {
 					log.severe(logId + e.getStackTrace());
 				}
@@ -177,7 +198,7 @@ public class GasStation extends Thread {
             try {
 				tank.setFuel(-fuelRequest);
 			} catch (Exception e) {
-				log.info(logId + e.getStackTrace());
+				log.severe(logId + e.getStackTrace());
 				tank.setFull();
 			}
             log.info("The fuel reserve have now: " + tank.getFuel() + " liters.");
