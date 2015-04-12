@@ -76,7 +76,7 @@ public class Menu {
         System.out.println("How much would you like to add?");
         int fuel = (int) in.nextInt();
         if(fuel <= maxCapacity - fuelReserve) {
-            station.addFuel(fuel);
+            station.addFuel();
         }
     }
 

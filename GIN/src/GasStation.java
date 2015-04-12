@@ -14,9 +14,7 @@ public class GasStation extends Thread {
     private CarWash carWash;
     private ArrayList<Pump> fuelPumps;
     private BlockingQueue<Car> incomingCars;
-    private Integer fuelReserve;
     private int id;
-    private int maxFuelCapacity;
     private int workingPumps;
     private int carsWashed;
     private int carsFueled;
@@ -27,6 +25,7 @@ public class GasStation extends Thread {
     private boolean isWorking;
     private double fuelCost;
     private String logId;
+    private FuelTank tank;
 
     public GasStation(CarWash carWash, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity, double fuelCost) {
         this.id = stationCount++;
@@ -36,8 +35,7 @@ public class GasStation extends Thread {
         for(Pump pump : this.fuelPumps) {
             pump.setStation(this);
         }
-        this.fuelReserve = fuelReserve;
-        this.maxFuelCapacity = fuelCapacity;
+        tank = new FuelTank(fuelReserve, fuelCapacity);
         incomingCars = new LinkedBlockingDeque<Car>();
         isWorking = true;
         this.fuelCost = fuelCost;
@@ -124,33 +122,13 @@ public class GasStation extends Thread {
 
     public void payForWash(double money) {
         synchronized (washProfits) {
-            while (payingForWash) {
-                try {
-                    washProfits.wait();
-                } catch (InterruptedException e) {
-                    e.getMessage();
-                }
-            }
-            payingForWash = true;
-            washProfits += money;
-            payingForWash = false;
-            washProfits.notifyAll();
+           washProfits += money;
         }
     }
 
     public void payForFuel(double money) {
         synchronized (fuelProfits) {
-            while (payingForFuel) {
-                try {
-                    fuelProfits.wait();
-                } catch (InterruptedException e) {
-                    e.getMessage();
-                }
-            }
-            payingForFuel = true;
             fuelProfits += money;
-            payingForFuel = false;
-            fuelProfits.notifyAll();
         }
     }
 
@@ -193,42 +171,19 @@ public class GasStation extends Thread {
             p.shutDown();
     }
 
-    public boolean requestFuel(int fuelRequest) {
-    	synchronized(fuelReserve) {
-            if (fuelReserve > fuelRequest) {
-                fuelReserve -= fuelRequest;
-                log.info("The fule reserve have now: " + fuelReserve + " liters.");
-                if(fuelReserve < maxFuelCapacity * 0.2) {
-                    log.severe(logId + "Fuel reserve is running low, must refill");
-                    while(fuelReserve < maxFuelCapacity * 0.2) {
-                        try {
-                            fuelReserve.wait();
-                        } catch (InterruptedException e) {
-                            log.severe(e.getMessage());
-                        }
-                    }
-                }
-                fuelReserve.notifyAll();
-                return true;
-            } else {
-                return false;
-            }
-        }
-    }
-
-    public void addFuel(int fuel) {
-        synchronized (fuelReserve) {
-            if (fuel <= (maxFuelCapacity - fuelReserve)) {
-                try {
-                    sleep(200 * fuel);
-                    fuelReserve += fuel;
-                } catch (InterruptedException e) {
-                    log.severe(e.getMessage());
-                } finally {
-                    log.info(logId + "The fuel reserve capacity is now " + fuelReserve + " Liters.");
-                    fuelReserve.notifyAll();
-                }
-            }
+    public void requestFuel(int fuelRequest) {
+    	synchronized(tank) {
+    		while(tank.getFuel() < fuelRequest) {
+    			try {
+					wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+    		}
+            tank.setFuel(tank.getFuel()-fuelRequest);
+            log.info("The fule reserve have now: " + tank.getFuel() + " liters.");
+            tank.notifyAll();
+            
         }
     }
 
@@ -236,17 +191,81 @@ public class GasStation extends Thread {
         for (Pump pump : fuelPumps) {
             if (pump.getId() == pumpId) {
                 workingPumps--;
-                notify();
+                notifyAll();
                 return;
             }
         }
     }
 
     public synchronized int getFuelReserve() {
-        return fuelReserve;
+        return tank.getFuel();
     }
 
     public int getMaxFuelCapacity() {
-        return maxFuelCapacity;
+        return tank.getMax();
+    }
+    
+    public void addFuel() {
+    	tank.reFull();
+    }
+    
+    class FuelTank {
+    	private int fuel;
+    	private final int MAX;
+    	private boolean inUse;
+    	
+    	public FuelTank(int fuel,int max) {
+    		this.fuel = fuel;
+    		this.MAX = max;
+    		inUse = false;
+    	}
+    	
+    	public void reFull() {
+    		synchronized (this) {
+				while(inUse) {
+					try {
+						wait(100);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+				try {
+					sleep(200);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				setFuel(MAX-fuel);
+				this.notifyAll();
+			}
+    	}
+    	
+		public int getFuel() {
+			return fuel;
+		}
+		public void setFuel(int reqFuel) {
+			this.fuel += reqFuel;
+			log.info(logId + "The fuel reserve capacity is now " + fuel + " Liters.");
+			if(fuel < MAX*0.2) {
+				Thread fuelTank = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						reFull();
+					}
+				});
+				fuelTank.start();
+			}
+		}
+		public int getMax() {
+			return MAX;
+		}
+
+		public boolean isInUse() {
+			return inUse;
+		}
+
+		public void setInUse(boolean inUse) {
+			this.inUse = inUse;
+		}
+		
     }
 }

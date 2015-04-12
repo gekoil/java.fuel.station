@@ -6,7 +6,7 @@ import java.util.logging.Logger;
 
 public class Pump extends Thread {
     private final Logger log = Logger.getLogger(Global.PROJECT_LOG_NAME);
-    private static final int SECONDS_PER_LITER = 50;
+    private static final int SECONDS_PER_LITER = 5;
 
     private static int pumpCount = 0;
     private String logId;
@@ -73,10 +73,10 @@ public class Pump extends Thread {
                 log.info(logId + "requesting " + fuelRequest + " Liters from station");
                 station.requestFuel(fuelRequest);
                 car.addFuel(fuelRequest);
-                log.info(logId + "got fuel for car " + car.getId() + ", now charging money");
                 sleep(SECONDS_PER_LITER * fuelRequest);
                 double price = station.getFuelCost() * fuelRequest;
                 station.payForFuel(price);
+                log.info(logId + "got fuel for car " + car.getId() + ", now charging money");
                 if(isRunning) {
                     station.addCar(car);
                 } else {
@@ -87,7 +87,7 @@ public class Pump extends Thread {
                 log.severe(e.toString());
             }
         }
-
+        System.out.println(logId);
         log.info(logId + "is close.");
         station.reportPumpClosed(id);
     }
