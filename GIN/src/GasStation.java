@@ -1,7 +1,10 @@
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.FileHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GasStation extends Thread {
@@ -10,7 +13,7 @@ public class GasStation extends Thread {
 
     private CarWash carWash;
     private ArrayList<Pump> fuelPumps;
-    private ArrayDeque<Car> incomingCars;
+    private BlockingQueue<Car> incomingCars;
     private Integer fuelReserve;
     private int id;
     private int maxFuelCapacity;
@@ -35,7 +38,7 @@ public class GasStation extends Thread {
         }
         this.fuelReserve = fuelReserve;
         this.maxFuelCapacity = fuelCapacity;
-        incomingCars = new ArrayDeque<>();
+        incomingCars = new LinkedBlockingDeque<Car>();
         isWorking = true;
         this.fuelCost = fuelCost;
         fuelProfits = 0.0;
@@ -52,8 +55,13 @@ public class GasStation extends Thread {
         for(Pump p : fuelPumps)
             p.start();
         while(isWorking || !incomingCars.isEmpty()) {
-            if(!incomingCars.isEmpty())
-                organizer(incomingCars.pollFirst());
+            try {
+				Car next = incomingCars.take();
+				if(next != null)
+	            	organizer(next);
+			} catch (InterruptedException e) {
+				log.info(e.toString());
+			}
         }
         log.info("Start a closing procedure.");
         try {
@@ -123,6 +131,7 @@ public class GasStation extends Thread {
                     e.getMessage();
                 }
             }
+            payingForWash = true;
             washProfits += money;
             payingForWash = false;
             washProfits.notifyAll();
@@ -138,6 +147,7 @@ public class GasStation extends Thread {
                     e.getMessage();
                 }
             }
+            payingForFuel = true;
             fuelProfits += money;
             payingForFuel = false;
             fuelProfits.notifyAll();
@@ -159,7 +169,7 @@ public class GasStation extends Thread {
 
     public void addCar(Car car) throws Exception {
         if(isWorking)
-            incomingCars.addLast(car);
+            incomingCars.put(car);
         else
             throw new Exception("Cant add more cars today.");
     }
@@ -184,7 +194,7 @@ public class GasStation extends Thread {
     }
 
     public boolean requestFuel(int fuelRequest) {
-        synchronized(fuelReserve) {
+    	synchronized(fuelReserve) {
             if (fuelReserve > fuelRequest) {
                 fuelReserve -= fuelRequest;
                 log.info("The fule reserve have now: " + fuelReserve + " liters.");

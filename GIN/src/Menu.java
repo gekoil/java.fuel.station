@@ -30,6 +30,12 @@ public class Menu {
                 case '4':
                     endOfDay = true;
                     gasSt.setWorking(false);
+                    try {
+                        gasSt.join();
+                    } catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
                 case '3': // Getting the end of day report is also part of the shut down sequence
                     Report report = gasSt.getStats();
                     System.out.println("End of day for gas station " + gasSt.getId() + ":\n" + report);
@@ -37,12 +43,6 @@ public class Menu {
                 default:
                     System.out.println("Wrong input, please try again!");
             }
-        }
-        try {
-            gasSt.join();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
         }
         System.out.println("goodbye!");
     }

@@ -18,8 +18,12 @@ public class Pump extends Thread {
     public  Pump() {
         id = pumpCount++;
         cars = new LinkedBlockingDeque<>();
-
-        FileHandler theHandler;
+        initLog();
+        log.info(logId + "is ready to Work.");
+    }
+    
+    private void initLog() {
+    	FileHandler theHandler;
         logId = "Pump no." + id + " ";
         try {
             theHandler = new FileHandler("logs\\pump_" + id + ".txt");
@@ -30,7 +34,6 @@ public class Pump extends Thread {
         } catch (SecurityException | IOException e) {
             e.printStackTrace();
         }
-        log.info(logId + "is ready to Work.");
     }
 
     public void setStation(GasStation station) {
@@ -63,10 +66,9 @@ public class Pump extends Thread {
     public void run() {
         while(isRunning || !cars.isEmpty()) {
             try {
-                if(cars.isEmpty()) {
-                    continue;
-                }
                 Car car = cars.take();
+                if(car == null)
+                	continue;
                 int fuelRequest = car.getFuel();
                 log.info(logId + "requesting " + fuelRequest + " Liters from station");
                 station.requestFuel(fuelRequest);
