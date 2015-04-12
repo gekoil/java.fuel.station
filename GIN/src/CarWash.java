@@ -175,10 +175,7 @@ public class CarWash extends Thread {
 					c.setWashed(WORKER_ID);
 					log.info(logId + "done clean Car " + c.getId() + " by worker " + WORKER_ID);
 					station.payForWash(washCost);
-					if(!goHome)
-						station.addCar(c);
-					else
-						c.leaveStation();
+					station.addCar(c);
 					log.info(logId + "Car " + c.getId() + " leave the wash station.");
 				} catch (Exception e) {
 					e.getMessage();

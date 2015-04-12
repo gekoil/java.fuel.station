@@ -91,6 +91,5 @@ public class Pump extends Thread {
             }
         }
         log.info(logId + "is close.");
-//        station.reportPumpClosed(id);
     }
 }

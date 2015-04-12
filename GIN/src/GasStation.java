@@ -25,6 +25,7 @@ public class GasStation extends Thread {
     private FuelTank tank;
 	private boolean payingWash;
 	private boolean payingFuel;
+	private boolean noMoreCars;
 
     public GasStation(CarWash carWash, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity, double fuelCost) {
         this.id = stationCount++;
@@ -64,7 +65,6 @@ public class GasStation extends Thread {
             for(Pump p : fuelPumps) {
                 p.join();
             }
-            carWash.join();
         } catch (InterruptedException e) {
             log.info(e.getMessage());
         }
@@ -114,9 +114,9 @@ public class GasStation extends Thread {
 
     public void payForWash(double money) {
         synchronized (washProfits) {
-        	while(payingWash ) {
+        	while(payingWash) {
         		try {
-					wait();
+					washProfits.wait();
 				} catch (InterruptedException e) {
 					log.info(e.toString());
 				}
@@ -132,7 +132,7 @@ public class GasStation extends Thread {
         synchronized (fuelProfits) {
         	while(payingFuel) {
         		try {
-					wait();
+					fuelProfits.wait();
 				} catch (InterruptedException e) {
 					log.info(e.toString());
 				}
@@ -176,9 +176,14 @@ public class GasStation extends Thread {
         return isWorking;
     }
 
-    public void setWorking(boolean isWorking) {
-        this.isWorking = isWorking;
-        carWash.setEndOfDay();
+    public void setWorkingOff() {
+    	carWash.setEndOfDay();
+    	try {
+			carWash.join();
+		} catch (InterruptedException e) {
+			log.info(e.toString());
+		}
+        this.isWorking = false;
     }
 
     public void requestFuel(int fuelRequest) {

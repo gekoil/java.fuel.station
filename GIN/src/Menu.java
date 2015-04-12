@@ -29,7 +29,7 @@ public class Menu {
                     break;
                 case '4':
                     endOfDay = true;
-                    gasSt.setWorking(false);
+                    gasSt.setWorkingOff();
                     try {
                         gasSt.join();
                     } catch (InterruptedException e) {
