@@ -59,11 +59,11 @@ public class SetupStation {
                         fuel = Integer.parseInt(fuelNode.getAttributes().getNamedItem("numOfLiters").getNodeValue());
                         pump = Integer.parseInt(fuelNode.getAttributes().getNamedItem("pumpNum").getNodeValue());
                     }
-                    try {
-                        station.addCar(new Car(id, wantWash, wantFuel, fuel, pump));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                }
+                try {
+                    station.addCar(new Car(id, wantWash, wantFuel, fuel, pump));
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
             }
         } else { // start with some default values
@@ -72,15 +72,15 @@ public class SetupStation {
             }
             wash = new CarWash(3, 50.0, 1000);
             station = new GasStation(wash, pumps, 0, 1500, 6.25);
-        }
-        station.start();
-        for(int i = 0; i < 10; i++) {
-            try {
-                station.addCar(new Car());
-            } catch (Exception e) {
-                e.printStackTrace();
+            for(int i = 0; i < 10; i++) {
+                try {
+                    station.addCar(new Car());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
+        station.start();
         return station;
     }
 

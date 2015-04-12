@@ -1,10 +1,8 @@
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.FileHandler;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GasStation extends Thread {
@@ -48,7 +46,7 @@ public class GasStation extends Thread {
 
     @Override
     public void run() {
-        log.info("The Station is open.");
+        log.info(logId + "The Station is open.");
         carWash.start();
         for(Pump p : fuelPumps)
             p.start();
@@ -57,7 +55,7 @@ public class GasStation extends Thread {
 			if(next != null)
             	organizer(next);
         }
-        log.info("Start a closing procedure.");
+        log.info(logId + "Start a closing procedure.");
         try {
             for(Pump p : fuelPumps) {
                 p.shutDown();
@@ -66,7 +64,7 @@ public class GasStation extends Thread {
                 p.join();
             }
         } catch (InterruptedException e) {
-            log.info(e.getMessage());
+            log.info(logId + e.getStackTrace());
         }
         getStats();
     }
@@ -118,7 +116,7 @@ public class GasStation extends Thread {
         		try {
 					washProfits.wait();
 				} catch (InterruptedException e) {
-					log.info(e.toString());
+					log.severe(logId + e.getStackTrace());
 				}
         	}
         	payingWash = true;
@@ -132,9 +130,9 @@ public class GasStation extends Thread {
         synchronized (fuelProfits) {
         	while(payingFuel) {
         		try {
-					fuelProfits.wait();
+                    fuelProfits.wait();
 				} catch (InterruptedException e) {
-					log.info(e.toString());
+					log.severe(logId + e.getStackTrace());
 				}
         	}
         	payingFuel = true;
@@ -194,18 +192,17 @@ public class GasStation extends Thread {
     					tank.setFull();
 					wait();
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					log.severe(logId + e.getStackTrace());
 				}
     		}
             try {
 				tank.setFuel(-fuelRequest);
 			} catch (Exception e) {
-				log.info(e.getMessage());
+				log.info(logId + e.getStackTrace());
 				tank.setFull();
 			}
-            log.info("The fule reserve have now: " + tank.getFuel() + " liters.");
+            log.info("The fuel reserve have now: " + tank.getFuel() + " liters.");
             tank.notifyAll();
-            
         }
     }
 
@@ -234,7 +231,7 @@ public class GasStation extends Thread {
     		try {
 				sleep(300);
 			} catch (InterruptedException e) {
-				log.info(e.toString());
+				log.info(logId + e.getStackTrace());
 			}
     		fuel = MAX;
     	}
