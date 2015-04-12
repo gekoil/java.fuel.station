@@ -64,6 +64,7 @@ public class GasStation extends Thread {
         log.info("Start a closing procedure.");
         try {
             carWash.join();
+            System.out.println("close wash");
             for(Pump p : fuelPumps) {
                 p.shutDown();
             }
@@ -180,7 +181,7 @@ public class GasStation extends Thread {
 					e.printStackTrace();
 				}
     		}
-            tank.setFuel(tank.getFuel()-fuelRequest);
+            tank.setFuel(-fuelRequest);
             log.info("The fule reserve have now: " + tank.getFuel() + " liters.");
             tank.notifyAll();
             
@@ -220,22 +221,14 @@ public class GasStation extends Thread {
     		inUse = false;
     	}
     	
-    	public void reFull() {
-    		synchronized (this) {
-				while(inUse) {
-					try {
-						wait(100);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-				try {
-					sleep(200);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
+    	public synchronized void reFull() {
+			try {
+				log.info("The fuel tanker is here.");
+				sleep(200);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} finally {
 				setFuel(MAX-fuel);
-				this.notifyAll();
 			}
     	}
     	
@@ -246,9 +239,11 @@ public class GasStation extends Thread {
 			this.fuel += reqFuel;
 			log.info(logId + "The fuel reserve capacity is now " + fuel + " Liters.");
 			if(fuel < MAX*0.2) {
+				log.info("The fuel Tank is lower then 20%!");
 				Thread fuelTank = new Thread(new Runnable() {
 					@Override
 					public void run() {
+						log.info("Calling for refill.");
 						reFull();
 					}
 				});

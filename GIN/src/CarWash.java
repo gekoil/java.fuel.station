@@ -33,9 +33,9 @@ public class CarWash extends Thread {
 		this.washCost = washCost;
 		waitingToWash = new LinkedBlockingDeque<Car>();
 		waitingToIntern =  new LinkedBlockingDeque<Car>();
+		initLog();
 		for(int i = 0; i < numWorkers; i++)
 			cleaners.add(new Cleaner());
-		initLog();
 		log.info(logId + "is ready to Work.");
 	}
 	
@@ -66,7 +66,7 @@ public class CarWash extends Thread {
 				cln.join();
 			log.info(logId + "is close.");
 		} catch (InterruptedException e) {
-			e.printStackTrace();
+			log.info(logId + e.toString());
 		}
 	}
 
@@ -117,7 +117,7 @@ public class CarWash extends Thread {
 					Car c = waitingToWash.poll();
 					if(c == null)
 						continue;
-					sleep(autoCleanTime * 500);
+					sleep(autoCleanTime * 5);
 					waitingToIntern.put(c);
 				} catch (InterruptedException | NullPointerException e) {
 					e.printStackTrace();

@@ -50,8 +50,11 @@ public class Pump extends Thread {
     }
 
     public void shutDown() {
+    	if(cars.isEmpty())
+    		log.info(logId + "is closing down, handling remaining cars");
+    	else
+    		log.info(logId + "is closing down.");
         this.isRunning = false;
-        log.info(logId + "is closing down, handling remaining cars");
     }
 
     public int getWaitingTime() {
@@ -66,7 +69,7 @@ public class Pump extends Thread {
     public void run() {
         while(isRunning || !cars.isEmpty()) {
             try {
-                Car car = cars.take();
+                Car car = cars.poll();
                 if(car == null)
                 	continue;
                 int fuelRequest = car.getFuel();
@@ -87,7 +90,6 @@ public class Pump extends Thread {
                 log.severe(e.toString());
             }
         }
-        System.out.println(logId);
         log.info(logId + "is close.");
         station.reportPumpClosed(id);
     }
