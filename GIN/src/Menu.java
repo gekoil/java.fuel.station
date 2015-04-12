@@ -4,8 +4,6 @@ import java.util.Scanner;
 
 public class Menu {
 
-    File xmlFile = null;
-
     public static void main(String[] args) {
         String fileName = "resources\\starter.xml";
         File xmlFile = new File(fileName);
@@ -74,7 +72,7 @@ public class Menu {
         int maxCapacity = station.getMaxFuelCapacity();
         System.out.println("Gas station currently has " + fuelReserve + " Liters and can store " + maxCapacity);
         System.out.println("How much would you like to add?");
-        int fuel = (int) in.nextInt();
+        int fuel = in.nextInt();
         if(fuel <= maxCapacity - fuelReserve) {
             station.addFuel(fuel);
         }

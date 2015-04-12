@@ -21,8 +21,6 @@ public class GasStation extends Thread {
     private double fuelCost;
     private String logId;
     private FuelTank tank;
-	private boolean payingWash;
-	private boolean payingFuel;
 
     public GasStation(CarWash carWash, ArrayList<Pump> fuelPumps, int fuelReserve, int fuelCapacity, double fuelCost) {
         this.id = stationCount++;
@@ -33,13 +31,11 @@ public class GasStation extends Thread {
             pump.setStation(this);
         }
         tank = new FuelTank(fuelReserve, fuelCapacity);
-        incomingCars = new LinkedBlockingDeque<Car>();
+        incomingCars = new LinkedBlockingDeque<>();
         isWorking = true;
         this.fuelCost = fuelCost;
         fuelProfits = 0.0;
         washProfits = 0.0;
-        payingWash = false;
-        payingFuel = false;
         initLog();
     }
 
@@ -112,33 +108,13 @@ public class GasStation extends Thread {
 
     public void payForWash(double money) {
         synchronized (washProfits) {
-            while(payingWash) {
-                try {
-                    washProfits.wait();
-                } catch (InterruptedException e) {
-                    log.severe(logId + e.getStackTrace());
-                }
-            }
-            payingWash = true;
             washProfits += money;
-            payingWash = false;
-            washProfits.notifyAll();
         }
     }
 
     public void payForFuel(double money) {
         synchronized (fuelProfits) {
-            while(payingFuel) {
-                try {
-                    fuelProfits.wait();
-                } catch (InterruptedException e) {
-                    log.severe(logId + e.getStackTrace());
-                }
-            }
-            payingFuel = true;
             fuelProfits += money;
-            payingFuel = false;
-            fuelProfits.notifyAll();
         }
     }
 
@@ -153,6 +129,7 @@ public class GasStation extends Thread {
     public void addFuelPump(Pump fuelPump) {
         fuelPump.setStation(this);
         fuelPumps.add(fuelPump);
+        fuelPump.start();
     }
 
     public void addCar(Car car) throws Exception {
@@ -213,20 +190,20 @@ public class GasStation extends Thread {
     public int getMaxFuelCapacity() {
         return tank.getMax();
     }
-    
+
     public void addFuel(int fuel) {
     	requestFuel(fuel);
     }
-    
+
     class FuelTank {
     	private int fuel;
     	private final int MAX;
-    	
+
     	public FuelTank(int fuel,int max) {
     		this.fuel = fuel;
     		this.MAX = max;
     	}
-    	
+
     	public synchronized void setFull() {
     		try {
 				sleep(300);
@@ -235,7 +212,7 @@ public class GasStation extends Thread {
 			}
     		fuel = MAX;
     	}
-    	
+
 		public int getFuel() {
 			return fuel;
 		}
@@ -249,10 +226,10 @@ public class GasStation extends Thread {
 		public int getMax() {
 			return MAX;
 		}
-		
+
 		public int getLow() {
 			return (int)( MAX*0.2);
 		}
-		
+
     }
 }

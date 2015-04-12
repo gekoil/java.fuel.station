@@ -1,9 +1,6 @@
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -33,8 +30,8 @@ public class CarWash extends Thread {
 		this.autoCleanTime = autoCleanTime;
 		this.washCost = washCost;
 		this.pollingCar = false;
-		waitingToWash = new LinkedBlockingDeque<Car>();
-		waitingToIntern =  new LinkedBlockingDeque<Car>();
+		waitingToWash = new LinkedBlockingDeque<>();
+		waitingToIntern =  new LinkedBlockingDeque<>();
 		initLog();
 		for(int i = 0; i < numWorkers; i++)
 			cleaners.add(new Cleaner());

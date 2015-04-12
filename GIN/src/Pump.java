@@ -21,9 +21,9 @@ public class Pump extends Thread {
         initLog();
         log.info(logId + "is ready to Work.");
     }
-    
+
     private void initLog() {
-    	FileHandler theHandler;
+        FileHandler theHandler;
         logId = "Pump no." + id + " ";
         try {
             theHandler = new FileHandler("logs\\pump_" + id + ".txt");
@@ -50,10 +50,10 @@ public class Pump extends Thread {
     }
 
     public void shutDown() {
-    	if(cars.isEmpty())
-    		log.info(logId + "is closing down, handling remaining cars");
-    	else
-    		log.info(logId + "is closing down.");
+        if(cars.isEmpty())
+            log.info(logId + "is closing down, handling remaining cars");
+        else
+            log.info(logId + "is closing down.");
         this.isRunning = false;
     }
 
@@ -68,10 +68,10 @@ public class Pump extends Thread {
     @Override
     public void run() {
         while(isRunning || !cars.isEmpty()) {
+            Car car = cars.poll();
+            if(car == null)
+                continue;
             try {
-                Car car = cars.poll();
-                if(car == null)
-                	continue;
                 int fuelRequest = car.getFuel();
                 log.info(logId + "requesting " + fuelRequest + " Liters from station");
                 station.requestFuel(fuelRequest);
@@ -80,15 +80,20 @@ public class Pump extends Thread {
                 double price = station.getFuelCost() * fuelRequest;
                 station.payForFuel(price);
                 log.info(logId + "got fuel for car " + car.getId() + ", now charging money");
-                if(isRunning) {
-                    station.addCar(car);
-                } else {
-                    car.leaveStation();
-                }
-                log.info(logId + "car " + car.getId() + "returned to station");
             } catch (Exception e) {
                 log.severe(logId + e.getStackTrace());
             }
+            if(isRunning) {
+                try {
+                    station.addCar(car);
+                } catch (Exception e) {
+                    log.severe(logId + e.getStackTrace());
+                }
+            }
+            else {
+                car.leaveStation();
+            }
+            log.info(logId + "car " + car.getId() + "returned to station");
         }
         log.info(logId + "is close.");
     }
