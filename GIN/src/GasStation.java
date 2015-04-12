@@ -15,7 +15,6 @@ public class GasStation extends Thread {
     private ArrayList<Pump> fuelPumps;
     private BlockingQueue<Car> incomingCars;
     private int id;
-    private int workingPumps;
     private int carsWashed;
     private int carsFueled;
     private Double fuelProfits;
