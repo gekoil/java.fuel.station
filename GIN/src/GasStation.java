@@ -234,7 +234,6 @@ public class GasStation extends Thread {
     		fuel = MAX;
     	}
     	
-    	
 		public int getFuel() {
 			return fuel;
 		}
